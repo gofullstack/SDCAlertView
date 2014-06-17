@@ -33,6 +33,7 @@
 @property (nonatomic, readonly) NSInteger firstOtherButtonIndex;
 @property (nonatomic, getter = isFirstOtherButtonEnabled) BOOL firstOtherButtonEnabled;
 @property (nonatomic) BOOL alwaysShowsButtonsVertically;
+@property (nonatomic, assign) BOOL doNotBoldCancel;
 
 @property (nonatomic) CGSize maximumSize;
 

@@ -35,9 +35,9 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 
 + (void)initialize {
 	[super initialize];
-	
+
 	SDCAlertView *appearance = [self appearance];
-	
+
 	[appearance setTitleLabelFont:[UIFont boldSystemFontOfSize:17]];
 	[appearance setMessageLabelFont:[UIFont systemFontOfSize:14]];
 	[appearance setTextFieldFont:[UIFont systemFontOfSize:13]];
@@ -55,7 +55,7 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 		_alertBackgroundView = [[SDCAlertViewBackgroundView alloc] init];
 		[_alertBackgroundView setTranslatesAutoresizingMaskIntoConstraints:NO];
 	}
-	
+
 	return _alertBackgroundView;
 }
 
@@ -64,7 +64,7 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 		_alertContentView = [[SDCAlertViewContentView alloc] initWithDelegate:self];
 		[_alertContentView setTranslatesAutoresizingMaskIntoConstraints:NO];
 	}
-	
+
 	return _alertContentView;
 }
 
@@ -76,16 +76,16 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 
 - (id)init {
 	self = [super init];
-	
+
 	if (self) {
 		[self setTranslatesAutoresizingMaskIntoConstraints:NO];
-		
+
 		[self addParallaxEffect];
-				
+
 		self.layer.masksToBounds = YES;
 		self.layer.cornerRadius = SDCAlertViewCornerRadius;
 	}
-	
+
 	return self;
 }
 
@@ -95,34 +95,34 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 			cancelButtonTitle:(NSString *)cancelButtonTitle
 			otherButtonTitles:(NSString *)otherButtonTitles, ... {
 	self = [self init];
-	
+
 	if (self) {
 		_delegate = delegate;
-		
+
 		[self createContentViewWithTitle:title message:message];
 		self.alertContentView.cancelButtonTitle = cancelButtonTitle;
-		
+
 		va_list argumentList;
 		va_start(argumentList, otherButtonTitles);
 		for (NSString *buttonTitle = otherButtonTitles; buttonTitle != nil; buttonTitle = va_arg(argumentList, NSString *))
 			[self.alertContentView addButtonWithTitle:buttonTitle];
 	}
-	
+
 	return self;
 }
 
 - (void)addParallaxEffect {
 	UIInterpolatingMotionEffect *horizontalParallax;
 	UIInterpolatingMotionEffect *verticalParallax;
-	
+
 	horizontalParallax = [[UIInterpolatingMotionEffect alloc] initWithKeyPath:@"center.x" type:UIInterpolatingMotionEffectTypeTiltAlongHorizontalAxis];
 	horizontalParallax.minimumRelativeValue = @(-SDCAlertViewParallaxSlideMagnitude.horizontal);
 	horizontalParallax.maximumRelativeValue = @(SDCAlertViewParallaxSlideMagnitude.horizontal);
-	
+
 	verticalParallax = [[UIInterpolatingMotionEffect alloc] initWithKeyPath:@"center.y" type:UIInterpolatingMotionEffectTypeTiltAlongVerticalAxis];
 	verticalParallax.minimumRelativeValue = @(-SDCAlertViewParallaxSlideMagnitude.vertical);
 	verticalParallax.maximumRelativeValue = @(SDCAlertViewParallaxSlideMagnitude.vertical);
-	
+
 	UIMotionEffectGroup *groupMotionEffect = [[UIMotionEffectGroup alloc] init];
 	groupMotionEffect.motionEffects = @[horizontalParallax, verticalParallax];
 	[self addMotionEffect:groupMotionEffect];
@@ -139,12 +139,12 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 - (void)show {
 	[self updateFirstButtonEnabledStatus];
 	[self monitorChangesForTextFields:self.alertContentView.textFields];
-	
+
 	[self.alertContentView prepareForShowing];
-	
+
 	[self addSubview:self.alertBackgroundView];
 	[self addSubview:self.alertContentView];
-	
+
 	[self.transitionCoordinator presentAlert:self];
 }
 
@@ -167,7 +167,7 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 - (void)willBeDismissedWithButtonIndex:(NSInteger)buttonIndex {
 	if ([self.delegate respondsToSelector:@selector(alertView:willDismissWithButtonIndex:)])
 		[self.delegate alertView:self willDismissWithButtonIndex:buttonIndex];
-    
+
     if (self.willDismissHandler)
         self.willDismissHandler(buttonIndex);
 }
@@ -175,7 +175,7 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 - (void)wasDismissedWithButtonIndex:(NSInteger)buttonIndex {
 	if ([self.delegate respondsToSelector:@selector(alertView:didDismissWithButtonIndex:)])
 		[self.delegate alertView:self didDismissWithButtonIndex:buttonIndex];
-	
+
 	if (self.didDismissHandler)
 		self.didDismissHandler(buttonIndex);
 }
@@ -185,14 +185,14 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 - (BOOL)becomeFirstResponder {
 	[super becomeFirstResponder];
 	[self.alertContentView becomeFirstResponder];
-	
+
 	return YES;
 }
 
 - (BOOL)resignFirstResponder {
 	[super resignFirstResponder];
 	[self.alertContentView resignFirstResponder];
-	
+
 	return YES;
 }
 
@@ -249,6 +249,11 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 	return self.alertContentView.customContentView;
 }
 
+- (void)setDoNotBoldCancel:(BOOL)doNotBoldCancel {
+  _doNotBoldCancel = doNotBoldCancel;
+  self.alertContentView.doNotBoldCancel = doNotBoldCancel;
+}
+
 - (void)createContentViewWithTitle:(NSString *)title message:(NSString *)message {
 	self.alertContentView.title = title;
 	self.alertContentView.message = message;
@@ -302,10 +307,10 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 - (void)tappedButtonAtIndex:(NSInteger)index {
 	if ([self.delegate respondsToSelector:@selector(alertView:clickedButtonAtIndex:)])
 		[self.delegate alertView:self clickedButtonAtIndex:index];
-	
+
 	if (self.clickedButtonHandler)
 		self.clickedButtonHandler(index);
-	
+
 	if ([self.delegate respondsToSelector:@selector(alertView:shouldDismissWithButtonIndex:)]) {
 		if ([self.delegate alertView:self shouldDismissWithButtonIndex:index])
 			[self dismissWithClickedButtonIndex:index animated:YES];
@@ -344,17 +349,17 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 
 - (void)updateConstraints {
 	[self removeConstraints:[self constraints]];
-	
+
 	[self.alertBackgroundView sdc_centerInSuperview];
 	[self.alertBackgroundView sdc_pinWidthToWidthOfView:self];
 	[self.alertBackgroundView sdc_pinHeightToHeightOfView:self];
-	
+
 	[self.alertContentView sdc_centerInSuperview];
 	[self.alertContentView sdc_pinWidthToWidthOfView:self];
 	[self.alertContentView sdc_pinHeightToHeightOfView:self];
-	
+
 	[self positionSelf];
-	
+
 	[super updateConstraints];
 }
 
@@ -398,15 +403,15 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 													 delegate:nil
 											cancelButtonTitle:[buttons firstObject]
 											otherButtonTitles:nil];
-	
+
 	for (int i = 1; i < [buttons count]; i++)
 		[alert addButtonWithTitle:buttons[i]];
-	
+
 	if (subview)
 		[alert.contentView addSubview:subview];
-	
+
 	[alert show];
-	return alert;		
+	return alert;
 }
 
 @end
@@ -415,7 +420,7 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 
 - (BOOL)attributedString:(NSAttributedString *)string hasAttribute:(NSString *)attribute {
 	NSRange range = NSMakeRange(0, [string length]);
-	
+
 	__block BOOL hasAttribute = NO;
 	[string enumerateAttribute:attribute inRange:range options:0 usingBlock:^(id value, NSRange range, BOOL *stop) {
 		if (value) {
@@ -423,7 +428,7 @@ static UIOffset const SDCAlertViewParallaxSlideMagnitude = {15.75, 15.75};
 			*stop = YES;
 		}
 	}];
-	
+
 	return hasAttribute;
 }
 

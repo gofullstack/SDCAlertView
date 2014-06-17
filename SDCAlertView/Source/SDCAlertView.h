@@ -61,6 +61,7 @@ typedef NS_ENUM(NSInteger, SDCAlertViewStyle) {
 @property (nonatomic, readonly) NSInteger numberOfButtons;
 
 @property (nonatomic, readonly, getter = isVisible) BOOL visible;
+@property (nonatomic, assign) BOOL doNotBoldCancel;
 
 @property (nonatomic) SDCAlertViewStyle alertViewStyle;
 
@@ -80,7 +81,7 @@ typedef NS_ENUM(NSInteger, SDCAlertViewStyle) {
 @property (nonatomic, weak) id <SDCAlertViewDelegate> delegate;
 
 /*
- *  The following properties are blocks as alternatives to using delegate methods. It's possible to implement both the 
+ *  The following properties are blocks as alternatives to using delegate methods. It's possible to implement both the
  *  delegate and set its corresponding block. In that case, the delegate will be called before the block will be executed.
  *
  *  In the case of alertView:shouldDismissWithButtonIndex:/shouldDismissHandler and
@@ -190,7 +191,7 @@ typedef NS_ENUM(NSInteger, SDCAlertViewStyle) {
  *  Methods with a non-nil and non-empty buttons array will add the buttons in order, making the first button of the array
  *  the cancel button. Method calls with a non-nil subview argument will have the subview added to the alert's contentView.
  */
- 
+
 + (instancetype)alertWithTitle:(NSString *)title message:(NSString *)message;
 + (instancetype)alertWithTitle:(NSString *)title message:(NSString *)message buttons:(NSArray *)buttons;
 

@@ -60,16 +60,16 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 
 - (instancetype)initWithDelegate:(id<SDCAlertViewContentViewDelegate>)delegate {
 	self = [super init];
-	
+
 	if (self) {
 		_delegate = delegate;
 		_cancelButtonIndex = SDCAlertViewUnspecifiedButtonIndex;
-		
+
 		_firstOtherButtonEnabled = YES;
-		
+
 		[self initializeSubviews];
 	}
-	
+
 	return self;
 }
 - (void)initializeSubviews {
@@ -242,7 +242,7 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 
 - (void)setFirstOtherButtonEnabled:(BOOL)firstOtherButtonEnabled {
 	_firstOtherButtonEnabled = firstOtherButtonEnabled;
-	
+
 	// Reload both tables. We could try figuring out which exact tableView/indexPath combination to reload, but this is just easier...
 	[self.suggestedButtonTableView reloadData];
 	[self.otherButtonsTableView reloadData];
@@ -292,7 +292,7 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 				NSInteger buttonIndex = self.firstOtherButtonIndex - 1 + indexPath.row;
 				if (buttonIndex >= self.cancelButtonIndex)
 					buttonIndex++;
-				
+
 				return buttonIndex;
 			} else {
 				return self.firstOtherButtonIndex + indexPath.row;
@@ -309,7 +309,7 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 		if ([self buttonIndexForButtonAtIndexPath:indexPath inTableView:tableView] == SDCAlertViewDefaultFirstButtonIndex)
 			return self.isFirstOtherButtonEnabled;
 	}
-	
+
 	return YES;
 }
 
@@ -331,7 +331,23 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
-	cell.textLabel.font = (tableView == self.suggestedButtonTableView) ? self.suggestedButtonFont : self.normalButtonFont;
+	if (self.doNotBoldCancel) {
+      if (tableView == self.otherButtonsTableView) {
+          if (indexPath.row == 0) {
+              cell.textLabel.font = self.suggestedButtonFont;
+          }
+          else {
+              cell.textLabel.font = self.normalButtonFont;
+          }
+      }
+      else {
+          cell.textLabel.font = self.normalButtonFont;
+      }
+  }
+  else {
+      cell.textLabel.font = (tableView == self.suggestedButtonTableView) ? self.suggestedButtonFont : self.normalButtonFont;
+  }
+
 	cell.textLabel.textColor = self.buttonTextColor ? self.buttonTextColor : self.tintColor;
 	cell.backgroundColor = [UIColor clearColor];
 	cell.textLabel.textAlignment = NSTextAlignmentCenter;
@@ -344,18 +360,18 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
 	cell.textLabel.text = [self buttonTitleAtIndex:[self buttonIndexForButtonAtIndexPath:indexPath inTableView:tableView]];
-	
+
 	return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	NSUInteger buttonIndex = [self buttonIndexForButtonAtIndexPath:indexPath inTableView:tableView];
-	
+
 	if ([self.delegate respondsToSelector:@selector(alertContentView:shouldDeselectButtonAtIndex:)]) {
 		if ([self.delegate alertContentView:self shouldDeselectButtonAtIndex:buttonIndex])
 			[tableView deselectRowAtIndexPath:indexPath animated:YES];
 	}
-    
+
 	[self.delegate alertContentView:self didTapButtonAtIndex:buttonIndex];
 }
 
@@ -387,12 +403,12 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 
 - (NSArray *)textFields {
 	NSArray *elements = [self alertViewElementsToDisplay];
-	
+
 	NSMutableArray *textFields = [NSMutableArray array];
-	
+
 	if ([elements containsObject:self.primaryTextField])	[textFields addObject:self.primaryTextField];
 	if ([elements containsObject:self.secondaryTextField])	[textFields addObject:self.secondaryTextField];
-	
+
 	return textFields;
 }
 
@@ -401,16 +417,16 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 - (BOOL)becomeFirstResponder {
 	[super becomeFirstResponder];
 	[self.primaryTextField becomeFirstResponder];
-	
+
 	return YES;
 }
 
 - (BOOL)resignFirstResponder {
 	[super resignFirstResponder];
-	
+
 	[self.primaryTextField resignFirstResponder];
 	[self.secondaryTextField resignFirstResponder];
-	
+
 	return YES;
 }
 
@@ -428,67 +444,67 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 
 - (NSArray *)alertViewElementsToDisplay {
 	NSMutableArray *elements = [NSMutableArray array];
-	
+
 	if ([self.titleLabel.text length] > 0)		[elements addObject:self.titleLabel];
 	if ([self.messageLabel.text length] > 0)	[elements addObject:self.messageLabel];
 	if ([elements count] > 0)					[elements addObject:self.contentScrollView];
-	
+
 	if (self.numberOfTextFields > 0) {
 		[elements addObject:self.textFieldBackgroundView];
 		[elements addObject:self.primaryTextField];
-		
+
 		if (self.numberOfTextFields == 2) {
 			[elements addObject:self.textFieldSeparatorView];
 			[elements addObject:self.secondaryTextField];
 		}
 	}
-	
+
 	if ([[self.customContentView subviews] count] > 0)		[elements addObject:self.customContentView];
-	
+
 	if (self.numberOfButtons > 0) {
 		// There is at least one button, so we want to display the top separator for sure
 		[elements addObject:self.buttonTopSeparatorView];
-		
+
 		if (self.numberOfButtons > 1) {
 			// There is more than one button, so also display the table view that holds the button(s) that is/are not suggested
 			[elements addObject:self.otherButtonsTableView];
-			
+
 			if (self.numberOfButtons == 2)
 				[elements addObject:self.buttonSeparatorView]; // There are exactly two buttons, display the thin separator
 		}
-		
+
 		// And lastly, add the suggested button (this line is at the end because the suggested button is also at the "end" of the alert)
 		[elements addObject:self.suggestedButtonTableView];
 	}
-	
+
 	return elements;
 }
 
 - (void)createViewHierarchy {
 	NSArray *elements = [self alertViewElementsToDisplay];
-	
+
 	if ([elements containsObject:self.titleLabel])			[self.contentScrollView addSubview:self.titleLabel];
 	if ([elements containsObject:self.messageLabel])		[self.contentScrollView addSubview:self.messageLabel];
 	if ([elements containsObject:self.contentScrollView])	[self addSubview:self.contentScrollView];
-	
+
 	if ([elements containsObject:self.primaryTextField]) {
 		[self addSubview:self.textFieldBackgroundView];
 		[self.textFieldBackgroundView addSubview:self.primaryTextField];
-		
+
 		if ([elements containsObject:self.secondaryTextField]) {
 			[self.textFieldBackgroundView addSubview:self.textFieldSeparatorView];
 			[self.textFieldBackgroundView addSubview:self.secondaryTextField];
 		}
 	}
-	
+
 	if ([elements containsObject:self.customContentView])
 		[self addSubview:self.customContentView];
-	
+
 	if ([elements containsObject:self.suggestedButtonTableView]) {
 		[self addSubview:self.suggestedButtonTableView];
 		[self addSubview:self.buttonTopSeparatorView];
 	}
-	
+
 	if ([elements containsObject:self.otherButtonsTableView]) {
 		[self addSubview:self.otherButtonsTableView];
 		[self insertSubview:self.buttonSeparatorView aboveSubview:self.otherButtonsTableView];
@@ -499,43 +515,43 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 	// If we don't have our maximum size yet, no need to create constraints. Auto-layout will even complain about a negative height for the scroll view.
 	if (!CGSizeEqualToSize(self.maximumSize, CGSizeZero)) {
 		NSArray *elements = [self alertViewElementsToDisplay];
-		
+
 		if ([elements containsObject:self.contentScrollView])			[self positionContentScrollView];
 		if ([elements containsObject:self.textFieldBackgroundView])		[self positionTextFields];
 		if ([elements containsObject:self.customContentView])			[self positionCustomContentView];
 		if ([elements containsObject:self.suggestedButtonTableView])	[self positionButtons];
-		
+
 		[self positionAlertElements];
 	}
-	
+
 	[super updateConstraints];
 }
 
 - (void)positionContentScrollView {
 	NSMutableString *verticalVFL = [@"V:|-(==topSpace)" mutableCopy];
 	NSArray *elements = [self alertViewElementsToDisplay];
-	
+
 	CGFloat topSpace = SDCAlertViewContentPadding.top;
 	if (![elements containsObject:self.titleLabel]) topSpace += SDCAlertViewLabelSpacing;
-	
+
 	if ([elements containsObject:self.titleLabel]) {
 		[self.titleLabel sdc_pinWidthToWidthOfView:self.contentScrollView offset:-(SDCAlertViewContentPadding.left + SDCAlertViewContentPadding.right)];
 		[self.titleLabel sdc_horizontallyCenterInSuperview];
 		[verticalVFL appendString:@"-[titleLabel]"];
 	}
-	
+
 	if ([elements containsObject:self.messageLabel]) {
 		[self.messageLabel sdc_pinWidthToWidthOfView:self.contentScrollView offset:-(SDCAlertViewContentPadding.left + SDCAlertViewContentPadding.right)];
 		[self.messageLabel sdc_horizontallyCenterInSuperview];
-		
+
 		if ([elements containsObject:self.titleLabel])
 			[verticalVFL appendString:@"-(==labelSpace)"];
-		
+
 		[verticalVFL appendString:@"-[messageLabel]"];
 	}
-	
+
 	[verticalVFL appendString:@"|"];
-	
+
 	NSDictionary *mapping = @{@"titleLabel": self.titleLabel, @"messageLabel": self.messageLabel};
 	NSDictionary *metrics = @{@"topSpace": @(topSpace), @"labelSpace": @(SDCAlertViewLabelSpacing)};
 	[self.contentScrollView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:verticalVFL options:0 metrics:metrics views:mapping]];
@@ -544,26 +560,26 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 - (void)positionTextFields {
 	NSDictionary *mapping = @{@"primaryTextField": self.primaryTextField, @"textFieldSeparator": self.textFieldSeparatorView, @"secondaryTextField": self.secondaryTextField};
 	NSDictionary *metrics = @{@"primaryTextFieldHeight": @(SDCAlertViewPrimaryTextFieldHeight), @"secondaryTextFieldHeight": @(SDCAlertViewSecondaryTextFieldHeight), @"separatorHeight": @(SDCAlertViewGetSeparatorThickness())};
-	
+
 	UIEdgeInsets insets = SDCAlertViewTextFieldBackgroundViewInsets;
 	insets.right = -insets.right;
-	
+
 	[self.primaryTextField sdc_pinWidthToWidthOfView:self.textFieldBackgroundView offset:insets.left + insets.right];
 	[self.primaryTextField sdc_horizontallyCenterInSuperview];
-	
+
 	NSMutableString *verticalVFL = [@"V:|[primaryTextField(==primaryTextFieldHeight)]" mutableCopy];
-	
+
 	if ([[self alertViewElementsToDisplay] containsObject:self.secondaryTextField]) {
 		[self.secondaryTextField sdc_pinWidthToWidthOfView:self.textFieldBackgroundView offset:insets.left + insets.right];
 		[self.secondaryTextField sdc_horizontallyCenterInSuperview];
-		
+
 		[self.textFieldSeparatorView sdc_pinHeight:SDCAlertViewGetSeparatorThickness()];
 		[self.textFieldSeparatorView sdc_alignEdges:UIRectEdgeLeft|UIRectEdgeRight withView:self.textFieldBackgroundView];
 		[self.textFieldSeparatorView sdc_alignEdges:UIRectEdgeTop withView:self.secondaryTextField];
-		
+
 		[verticalVFL appendString:@"[secondaryTextField(==secondaryTextFieldHeight)]"];
 	}
-	
+
 	[verticalVFL appendString:@"|"];
 	[self.textFieldBackgroundView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:verticalVFL options:0 metrics:metrics views:mapping]];
 }
@@ -579,26 +595,26 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 
 - (void)positionButtons {
 	NSArray *elements = [self alertViewElementsToDisplay];
-	
+
 	if ([elements containsObject:self.contentScrollView]) {
 		[self.buttonTopSeparatorView sdc_horizontallyCenterInSuperview];
 		[self.buttonTopSeparatorView sdc_pinWidthToWidthOfView:self];
 		[self.buttonTopSeparatorView sdc_pinHeight:SDCAlertViewGetSeparatorThickness()];
 	}
-	
+
 	[self.suggestedButtonTableView sdc_pinHeight:self.suggestedButtonTableView.rowHeight];
-		
+
 	if ([elements containsObject:self.otherButtonsTableView]) {
 		[self.otherButtonsTableView sdc_pinHeight:self.otherButtonsTableView.rowHeight * [self.otherButtonsTableView numberOfRowsInSection:0]];
-		
+
 		if ([self showsTableViewsSideBySide]) {
 			[self.suggestedButtonTableView sdc_alignEdges:UIRectEdgeRight withView:self];
 			[self.suggestedButtonTableView sdc_pinWidth:SDCAlertViewWidth / 2];
-			
+
 			[self.otherButtonsTableView sdc_alignEdges:UIRectEdgeLeft withView:self];
 			[self.otherButtonsTableView sdc_pinWidth:SDCAlertViewWidth / 2];
 			[self.otherButtonsTableView sdc_alignEdges:UIRectEdgeTop withView:self.suggestedButtonTableView];
-			
+
 			[self.buttonSeparatorView sdc_pinHeightToHeightOfView:self.suggestedButtonTableView];
 			[self.buttonSeparatorView sdc_alignEdges:UIRectEdgeTop|UIRectEdgeLeft withView:self.suggestedButtonTableView];
 			[self.buttonSeparatorView sdc_pinWidth:SDCAlertViewGetSeparatorThickness()];
@@ -622,59 +638,59 @@ static NSInteger const SDCAlertViewDefaultFirstButtonIndex = 0;
 
 - (CGFloat)heightForContentScrollView {
 	NSArray *elements = [self alertViewElementsToDisplay];
-	
+
 	CGFloat scrollViewHeight = self.maximumSize.height - SDCAlertViewContentPadding.bottom;
-	
+
 	if ([elements containsObject:self.suggestedButtonTableView])
 		scrollViewHeight -= (self.suggestedButtonTableView.rowHeight * [self.suggestedButtonTableView numberOfRowsInSection:0] + SDCAlertViewGetSeparatorThickness());
-	
+
 	if ([elements containsObject:self.primaryTextField])
 		scrollViewHeight -= (SDCAlertViewTextFieldBackgroundViewPadding.top + SDCAlertViewTextFieldBackgroundViewPadding.bottom + SDCAlertViewPrimaryTextFieldHeight);
-	
+
 	return MIN(scrollViewHeight, [self scrollViewContentHeight]);
 }
 
 - (void)positionAlertElements {
 	NSArray *elements = [self alertViewElementsToDisplay];
-	
+
 	NSMutableString *verticalVFL = [@"V:|" mutableCopy];
 	BOOL hasContentOtherThanButtons = NO;
-	
+
 	if ([elements containsObject:self.contentScrollView]) {
 		[self.contentScrollView sdc_pinHeight:[self heightForContentScrollView]];
 		[self.contentScrollView sdc_alignEdges:UIRectEdgeLeft|UIRectEdgeRight withView:self];
-		
+
 		[verticalVFL appendString:@"[scrollView]"];
 		hasContentOtherThanButtons = YES;
 	}
-	
+
 	if ([elements containsObject:self.textFieldBackgroundView]) {
 		UIEdgeInsets insets = SDCAlertViewTextFieldBackgroundViewPadding;
 		insets.right = -insets.right;
-		
+
 		[self.textFieldBackgroundView sdc_alignEdges:UIRectEdgeLeft|UIRectEdgeRight withView:self insets:insets];
 		[verticalVFL appendString:@"-(==textFieldBackgroundViewTopSpacing)-[textFieldBackgroundView]"];
 		hasContentOtherThanButtons = YES;
 	}
-	
+
 	if ([elements containsObject:self.customContentView]) {
 		[verticalVFL appendString:@"-[customContentView]"];
 		hasContentOtherThanButtons = YES;
 	}
-	
+
 	if ([elements containsObject:self.suggestedButtonTableView]) {
 		if (hasContentOtherThanButtons)
 			[verticalVFL appendString:@"-(==bottomSpacing)-[buttonTopSeparatorView]"];
-		
+
 		if ([elements containsObject:self.otherButtonsTableView])
 			[verticalVFL appendString:@"[otherButtonsTableView]"];
-		
+
 		if (![self showsTableViewsSideBySide])
 			[verticalVFL appendString:@"[suggestedButtonTableView]"];
 	}
-	
+
 	[verticalVFL appendString:@"|"];
-	
+
 	NSDictionary *metrics = @{@"textFieldBackgroundViewTopSpacing": @(SDCAlertViewTextFieldBackgroundViewPadding.top), @"bottomSpacing": @(SDCAlertViewContentPadding.bottom)};
 	NSDictionary *views = @{@"scrollView": self.contentScrollView, @"textFieldBackgroundView": self.textFieldBackgroundView, @"customContentView": self.customContentView, @"buttonTopSeparatorView": self.buttonTopSeparatorView, @"suggestedButtonTableView": self.suggestedButtonTableView, @"otherButtonsTableView": self.otherButtonsTableView};
 	[self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:verticalVFL options:0 metrics:metrics views:views]];
