@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         =	'SDCAlertViewHLT'
-  s.version      =	'1.51'
+  s.version      =	'1.5.1'
   s.license      =	{ :type => 'MIT', :file => 'LICENSE' }
   s.authors      =	{ 'Travis Palmer' => 'travis@gofullstack.com' }
   s.summary      =	'SDCAlertViewHLT is a UIAlertView clone with added functionality including a contentView property'
