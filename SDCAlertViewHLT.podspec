@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.homepage	 =	'https://github.com/tpalmer/SDCAlertView'
 
 # Source Info
-  s.platform     =	:ios, '7.0'
+  s.platform     =	:ios, '6.0'
   s.source       =	{ :git => 'https://github.com/tpalmer/SDCAlertView.git', :tag => "v#{s.version}" }
   s.source_files =	'SDCAlertView/Source/*.{h,m}'
 
